@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kuis Bahasa Indonesia — Pilih Kata Baku</title>
+<style>
+  :root { --navy:#172b4d; --blue:#28527a; --paper:#f4f7fb; --ink:#1f2937; --muted:#64748b; --green:#177245; --red:#b42318; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; }
+  header { background:#172b4d; border-bottom:4px solid #0f1f38; padding:22px 16px; color:#fff; }
+  .head-inner { max-width:900px; margin:auto; display:flex; align-items:center; gap:16px; }
+  .eyebrow { color:#dce8f7; font-size:.8rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  h1 { margin:6px 0; color:#ffffff; font-size:clamp(1.5rem,4vw,2.2rem); line-height:1.2; }
+  header p { margin:8px 0 0; color:#e2eaf5; }
+  main { max-width:900px; margin:22px auto; padding:0 14px 40px; }
+  .panel { background:#fff; border:1px solid #dce4ee; border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 3px 12px #172b4d0a; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .stat { background:#f7f9fc; border-radius:10px; padding:10px; text-align:center; }
+  .stat strong { display:block; font-size:1.25rem; color:var(--navy); }
+  .stat span { font-size:.82rem; color:var(--muted); }
+  .progress-wrap { height:8px; background:#e7edf5; border-radius:99px; overflow:hidden; margin-top:14px; }
+  .progress { height:100%; width:0%; background:var(--blue); transition:width .2s; }
+  .question-number { color:var(--blue); font-weight:700; font-size:.9rem; }
+  .question { font-size:1.15rem; font-weight:700; margin:8px 0 16px; }
+  .options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .option { display:flex; width:100%; gap:8px; align-items:center; justify-content:center; min-height:68px; padding:14px 10px; border:1px solid #d6dfeb; border-radius:10px; cursor:pointer; text-align:center; font-size:1.05rem; font-weight:700; background:#fff; color:var(--ink); }
+  .option:hover { background:#f5f8fc; border-color:#8aa4c2; }
+  .option input { accent-color:var(--navy); }
+  .option:has(input:checked) { border-color:var(--blue); background:#edf4fb; }
+  .option:disabled { opacity:1 !important; cursor:default; }
+  .option.correct { border:2px solid #177245 !important; background-color:#c9f2d8 !important; color:#14532d !important; }
+  .option.wrong { border:2px solid #b42318 !important; background-color:#ffd6d2 !important; color:#8e1b14 !important; }
+  .feedback { margin-top:12px; padding:12px; border-radius:9px; background:#f3f6fa; }
+  .feedback.good { color:var(--green); background:#edf8f1; }
+  .feedback.bad { color:var(--red); background:#fff1f0; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  button { border:0; border-radius:9px; padding:11px 16px; font-weight:700; cursor:pointer; font-size:.95rem; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .primary { color:white; background:var(--navy); }
+  .secondary { color:var(--navy); background:#e8eef6; }
+  .danger { color:#8e1b14; background:#fce9e7; }
+  .hidden { display:none !important; }
+  .result-score { font-size:2.4rem; color:var(--navy); font-weight:800; }
+  .review-item { padding:12px 0; border-bottom:1px solid #e5eaf1; }
+  .review-item:last-child { border-bottom:0; }
+  .tag { display:inline-block; border-radius:5px; padding:2px 7px; font-size:.78rem; font-weight:700; background:#e8eef6; color:var(--navy); }
+  footer { text-align:center; color:var(--muted); font-size:.8rem; padding:12px 16px 26px; }
+  @media(max-width:520px) { .panel { padding:14px; } .stats { gap:6px; } .stat span { font-size:.72rem; } .actions button { flex:1; } .options { gap:8px; } .option { min-height:60px; font-size:.95rem; padding:10px 6px; } }
+
+.status-grid, .stats, .summary-stats, .progress-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.stat, .status-card, .result-card, .progress-card {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #d7dee7;
+  border-radius: 10px;
+  background: #f8fafc;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.stat strong, .status-card strong, .result-card strong, .progress-card strong {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.correct, .status-correct {
+  background-color: #c9f2d8 !important;
+  border: 2px solid #239653 !important;
+  color: #155b32 !important;
+}
+.wrong, .status-wrong {
+  background-color: #ffd6d2 !important;
+  border: 2px solid #d83b32 !important;
+  color: #7b211c !important;
+}
+.option {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  margin: 10px 0;
+  border: 1px solid #ccd5df;
+  border-radius: 10px;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.option:disabled { opacity: 1; }
+@media (max-width: 520px) {
+  .status-grid, .stats, .summary-stats, .progress-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .stat, .status-card, .result-card, .progress-card { padding: 11px 8px; }
+}
+
+
+/* Awal kata pada setiap pilihan ditampilkan dengan huruf kapital */
+.option {
+  text-transform: capitalize;
+}
+
+
+.page-footer {
+  margin-top: 28px;
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+  background: #17324d;
+  border-radius: 8px;
+  letter-spacing: .2px;
+}
+
+
+  .brand-logo { width:76px; height:76px; flex:0 0 76px; display:block; }
+  .head-copy { min-width:0; }
+  @media(max-width:520px) {
+    .head-inner { align-items:flex-start; gap:12px; }
+    .brand-logo { width:58px; height:58px; flex-basis:58px; }
+  }
+
+</style>
+</head>
+<body>
+<header><div class="head-inner">
+  <img class="brand-logo" src="data:image/jpeg;base64,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" alt="Logo POK-JAR SILA KARSA">
+  <div class="head-copy">
+    <div class="eyebrow">POK-JAR SILA KARSA</div>
+    <h1>Pilih Kata Baku</h1>
+    <p>Bahasa Indonesia • 100 soal • Nilai otomatis</p>
+  </div>
+</div></header>
+<main>
+  <section class="panel" id="intro">
+    <h2>Petunjuk pengerjaan</h2>
+    <ul>
+      <li>Pilih kata baku dari dua kata yang ditampilkan.</li>
+      <li>Setiap jawaban benar bernilai <strong>1 poin</strong>; nilai maksimal 100.</li>
+      <li>Pilih salah satu dari dua kata. Jawaban langsung ditandai dengan warna.</li>
+      <li>Hijau berarti benar, merah berarti salah. Tidak ada penjelasan yang ditampilkan.</li>
+      <li>Tekan <strong>Soal Berikutnya</strong> untuk melanjutkan.</li>
+    </ul>
+    <button class="primary" id="startBtn">Mulai Kuis</button>
+  </section>
+
+  <section class="panel hidden" id="quizPanel">
+    
+      
+    </div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="question-number" id="questionNumber">SOAL 1 DARI 100</div>
+      <div class="question hidden" id="questionText"></div>
+      <div class="options" id="options"></div>
+      <div class="actions">
+        <button class="primary hidden" id="checkBtn" aria-hidden="true">Periksa Jawaban</button>
+        <button class="primary hidden" id="nextBtn">Soal Berikutnya</button>
+        <button class="secondary" id="quitBtn">Akhiri Kuis</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="resultPanel">
+    <div class="eyebrow">Hasil Kuis</div>
+    <h2>Kuis selesai!</h2>
+    <div class="result-score"><span id="finalScore">0</span>/100</div>
+    <p id="resultMessage"></p>
+    <div class="stats">
+      <div class="stat"><strong id="correctCount">0</strong><span>Benar</span></div>
+      <div class="stat"><strong id="wrongCount">0</strong><span>Salah</span></div>
+    </div>
+    <div class="actions">
+      
+      <button class="secondary" id="restartBtn">Ulangi Kuis</button>
+    </div>
+  </section>
+  
+</main>
+<footer class="page-footer">Bahasa Indonesia || Kata Baku || POK-JAR SILA KARSA || 2026</footer>
+<script>
+const questions = [
+  {prompt: "Pilih kata baku:", options: ["izin", "ijin"], answer: 0, explanation: "Bentuk baku: “izin”. Bentuk yang sering dijumpai tetapi tidak baku: “ijin”."},
+  {prompt: "Pilih kata baku:", options: ["risiko", "resiko"], answer: 0, explanation: "Bentuk baku: “risiko”. Bentuk yang sering dijumpai tetapi tidak baku: “resiko”."},
+  {prompt: "Pilih kata baku:", options: ["aktivitas", "aktifitas"], answer: 0, explanation: "Bentuk baku: “aktivitas”. Bentuk yang sering dijumpai tetapi tidak baku: “aktifitas”."},
+  {prompt: "Pilih kata baku:", options: ["apotek", "apotik"], answer: 0, explanation: "Bentuk baku: “apotek”. Bentuk yang sering dijumpai tetapi tidak baku: “apotik”."},
+  {prompt: "Pilih kata baku:", options: ["praktik", "praktek"], answer: 0, explanation: "Bentuk baku: “praktik”. Bentuk yang sering dijumpai tetapi tidak baku: “praktek”."},
+  {prompt: "Pilih kata baku:", options: ["nasihat", "nasehat"], answer: 0, explanation: "Bentuk baku: “nasihat”. Bentuk yang sering dijumpai tetapi tidak baku: “nasehat”."},
+  {prompt: "Pilih kata baku:", options: ["sekadar", "sekedar"], answer: 0, explanation: "Bentuk baku: “sekadar”. Bentuk yang sering dijumpai tetapi tidak baku: “sekedar”."},
+  {prompt: "Pilih kata baku:", options: ["silakan", "silahkan"], answer: 0, explanation: "Bentuk baku: “silakan”. Bentuk yang sering dijumpai tetapi tidak baku: “silahkan”."},
+  {prompt: "Pilih kata baku:", options: ["analisis", "analisa"], answer: 0, explanation: "Bentuk baku: “analisis”. Bentuk yang sering dijumpai tetapi tidak baku: “analisa”."},
+  {prompt: "Pilih kata baku:", options: ["diagnosis", "diagnosa"], answer: 0, explanation: "Bentuk baku: “diagnosis”. Bentuk yang sering dijumpai tetapi tidak baku: “diagnosa”."},
+  {prompt: "Pilih kata baku:", options: ["objek", "obyek"], answer: 0, explanation: "Bentuk baku: “objek”. Bentuk yang sering dijumpai tetapi tidak baku: “obyek”."},
+  {prompt: "Pilih kata baku:", options: ["subjek", "subyek"], answer: 0, explanation: "Bentuk baku: “subjek”. Bentuk yang sering dijumpai tetapi tidak baku: “subyek”."},
+  {prompt: "Pilih kata baku:", options: ["sistem", "sistim"], answer: 0, explanation: "Bentuk baku: “sistem”. Bentuk yang sering dijumpai tetapi tidak baku: “sistim”."},
+  {prompt: "Pilih kata baku:", options: ["teknik", "tehnik"], answer: 0, explanation: "Bentuk baku: “teknik”. Bentuk yang sering dijumpai tetapi tidak baku: “tehnik”."},
+  {prompt: "Pilih kata baku:", options: ["kualitas", "kwalitas"], answer: 0, explanation: "Bentuk baku: “kualitas”. Bentuk yang sering dijumpai tetapi tidak baku: “kwalitas”."},
+  {prompt: "Pilih kata baku:", options: ["kuantitas", "kwantitas"], answer: 0, explanation: "Bentuk baku: “kuantitas”. Bentuk yang sering dijumpai tetapi tidak baku: “kwantitas”."},
+  {prompt: "Pilih kata baku:", options: ["jadwal", "jadual"], answer: 0, explanation: "Bentuk baku: “jadwal”. Bentuk yang sering dijumpai tetapi tidak baku: “jadual”."},
+  {prompt: "Pilih kata baku:", options: ["Februari", "Pebruari"], answer: 0, explanation: "Bentuk baku: “Februari”. Bentuk yang sering dijumpai tetapi tidak baku: “Pebruari”."},
+  {prompt: "Pilih kata baku:", options: ["November", "Nopember"], answer: 0, explanation: "Bentuk baku: “November”. Bentuk yang sering dijumpai tetapi tidak baku: “Nopember”."},
+  {prompt: "Pilih kata baku:", options: ["sekretaris", "sekertaris"], answer: 0, explanation: "Bentuk baku: “sekretaris”. Bentuk yang sering dijumpai tetapi tidak baku: “sekertaris”."},
+  {prompt: "Pilih kata baku:", options: ["karier", "karir"], answer: 0, explanation: "Bentuk baku: “karier”. Bentuk yang sering dijumpai tetapi tidak baku: “karir”."},
+  {prompt: "Pilih kata baku:", options: ["konkret", "konkrit"], answer: 0, explanation: "Bentuk baku: “konkret”. Bentuk yang sering dijumpai tetapi tidak baku: “konkrit”."},
+  {prompt: "Pilih kata baku:", options: ["cedera", "cidera"], answer: 0, explanation: "Bentuk baku: “cedera”. Bentuk yang sering dijumpai tetapi tidak baku: “cidera”."},
+  {prompt: "Pilih kata baku:", options: ["cendekia", "cendikia"], answer: 0, explanation: "Bentuk baku: “cendekia”. Bentuk yang sering dijumpai tetapi tidak baku: “cendikia”."},
+  {prompt: "Pilih kata baku:", options: ["miliar", "milyar"], answer: 0, explanation: "Bentuk baku: “miliar”. Bentuk yang sering dijumpai tetapi tidak baku: “milyar”."},
+  {prompt: "Pilih kata baku:", options: ["triliun", "trilyun"], answer: 0, explanation: "Bentuk baku: “triliun”. Bentuk yang sering dijumpai tetapi tidak baku: “trilyun”."},
+  {prompt: "Pilih kata baku:", options: ["embus", "hembus"], answer: 0, explanation: "Bentuk baku: “embus”. Bentuk yang sering dijumpai tetapi tidak baku: “hembus”."},
+  {prompt: "Pilih kata baku:", options: ["napas", "nafas"], answer: 0, explanation: "Bentuk baku: “napas”. Bentuk yang sering dijumpai tetapi tidak baku: “nafas”."},
+  {prompt: "Pilih kata baku:", options: ["utang", "hutang"], answer: 0, explanation: "Bentuk baku: “utang”. Bentuk yang sering dijumpai tetapi tidak baku: “hutang”."},
+  {prompt: "Pilih kata baku:", options: ["salat", "shalat"], answer: 0, explanation: "Bentuk baku: “salat”. Bentuk yang sering dijumpai tetapi tidak baku: “shalat”."},
+  {prompt: "Pilih kata baku:", options: ["ustaz", "ustadz"], answer: 0, explanation: "Bentuk baku: “ustaz”. Bentuk yang sering dijumpai tetapi tidak baku: “ustadz”."},
+  {prompt: "Pilih kata baku:", options: ["zikir", "dzikir"], answer: 0, explanation: "Bentuk baku: “zikir”. Bentuk yang sering dijumpai tetapi tidak baku: “dzikir”."},
+  {prompt: "Pilih kata baku:", options: ["doa", "do'a"], answer: 0, explanation: "Bentuk baku: “doa”. Bentuk yang sering dijumpai tetapi tidak baku: “do'a”."},
+  {prompt: "Pilih kata baku:", options: ["pikir", "fikir"], answer: 0, explanation: "Bentuk baku: “pikir”. Bentuk yang sering dijumpai tetapi tidak baku: “fikir”."},
+  {prompt: "Pilih kata baku:", options: ["paham", "faham"], answer: 0, explanation: "Bentuk baku: “paham”. Bentuk yang sering dijumpai tetapi tidak baku: “faham”."},
+  {prompt: "Pilih kata baku:", options: ["ijazah", "ijasah"], answer: 0, explanation: "Bentuk baku: “ijazah”. Bentuk yang sering dijumpai tetapi tidak baku: “ijasah”."},
+  {prompt: "Pilih kata baku:", options: ["merek", "merk"], answer: 0, explanation: "Bentuk baku: “merek”. Bentuk yang sering dijumpai tetapi tidak baku: “merk”."},
+  {prompt: "Pilih kata baku:", options: ["nomor", "nomer"], answer: 0, explanation: "Bentuk baku: “nomor”. Bentuk yang sering dijumpai tetapi tidak baku: “nomer”."},
+  {prompt: "Pilih kata baku:", options: ["teladan", "tauladan"], answer: 0, explanation: "Bentuk baku: “teladan”. Bentuk yang sering dijumpai tetapi tidak baku: “tauladan”."},
+  {prompt: "Pilih kata baku:", options: ["andal", "handal"], answer: 0, explanation: "Bentuk baku: “andal”. Bentuk yang sering dijumpai tetapi tidak baku: “handal”."},
+  {prompt: "Pilih kata baku:", options: ["saksama", "seksama"], answer: 0, explanation: "Bentuk baku: “saksama”. Bentuk yang sering dijumpai tetapi tidak baku: “seksama”."},
+  {prompt: "Pilih kata baku:", options: ["kuitansi", "kwitansi"], answer: 0, explanation: "Bentuk baku: “kuitansi”. Bentuk yang sering dijumpai tetapi tidak baku: “kwitansi”."},
+  {prompt: "Pilih kata baku:", options: ["hierarki", "hirarki"], answer: 0, explanation: "Bentuk baku: “hierarki”. Bentuk yang sering dijumpai tetapi tidak baku: “hirarki”."},
+  {prompt: "Pilih kata baku:", options: ["frekuensi", "frekwensi"], answer: 0, explanation: "Bentuk baku: “frekuensi”. Bentuk yang sering dijumpai tetapi tidak baku: “frekwensi”."},
+  {prompt: "Pilih kata baku:", options: ["standardisasi", "standarisasi"], answer: 0, explanation: "Bentuk baku: “standardisasi”. Bentuk yang sering dijumpai tetapi tidak baku: “standarisasi”."},
+  {prompt: "Pilih kata baku:", options: ["zaman", "jaman"], answer: 0, explanation: "Bentuk baku: “zaman”. Bentuk yang sering dijumpai tetapi tidak baku: “jaman”."},
+  {prompt: "Pilih kata baku:", options: ["mengubah", "merubah"], answer: 0, explanation: "Bentuk baku: “mengubah”. Bentuk yang sering dijumpai tetapi tidak baku: “merubah”."},
+  {prompt: "Pilih kata baku:", options: ["memengaruhi", "mempengaruhi"], answer: 0, explanation: "Bentuk baku: “memengaruhi”. Bentuk yang sering dijumpai tetapi tidak baku: “mempengaruhi”."},
+  {prompt: "Pilih kata baku:", options: ["mempersilakan", "mempersilahkan"], answer: 0, explanation: "Bentuk baku: “mempersilakan”. Bentuk yang sering dijumpai tetapi tidak baku: “mempersilahkan”."},
+  {prompt: "Pilih kata baku:", options: ["memercayai", "mempercayai"], answer: 0, explanation: "Bentuk baku: “memercayai”. Bentuk yang sering dijumpai tetapi tidak baku: “mempercayai”."},
+  {prompt: "Pilih kata baku:", options: ["menerjemahkan", "menterjemahkan"], answer: 0, explanation: "Bentuk baku: “menerjemahkan”. Bentuk yang sering dijumpai tetapi tidak baku: “menterjemahkan”."},
+  {prompt: "Pilih kata baku:", options: ["mengoordinasikan", "mengkoordinasikan"], answer: 0, explanation: "Bentuk baku: “mengoordinasikan”. Bentuk yang sering dijumpai tetapi tidak baku: “mengkoordinasikan”."},
+  {prompt: "Pilih kata baku:", options: ["mempraktikkan", "mempraktekkan"], answer: 0, explanation: "Bentuk baku: “mempraktikkan”. Bentuk yang sering dijumpai tetapi tidak baku: “mempraktekkan”."},
+  {prompt: "Pilih kata baku:", options: ["memerhatikan", "memperhatikan"], answer: 0, explanation: "Bentuk baku: “memerhatikan”. Bentuk yang sering dijumpai tetapi tidak baku: “memperhatikan”."},
+  {prompt: "Pilih kata baku:", options: ["imbauan", "himbauan"], answer: 0, explanation: "Bentuk baku: “imbauan”. Bentuk yang sering dijumpai tetapi tidak baku: “himbauan”."},
+  {prompt: "Pilih kata baku:", options: ["cendera mata", "cinderamata"], answer: 0, explanation: "Bentuk baku: “cendera mata”. Bentuk yang sering dijumpai tetapi tidak baku: “cinderamata”."},
+  {prompt: "Pilih kata baku:", options: ["narasumber", "nara sumber"], answer: 0, explanation: "Bentuk baku: “narasumber”. Bentuk yang sering dijumpai tetapi tidak baku: “nara sumber”."},
+  {prompt: "Pilih kata baku:", options: ["pascasarjana", "pasca sarjana"], answer: 0, explanation: "Bentuk baku: “pascasarjana”. Bentuk yang sering dijumpai tetapi tidak baku: “pasca sarjana”."},
+  {prompt: "Pilih kata baku:", options: ["mahasiswa", "maha siswa"], answer: 0, explanation: "Bentuk baku: “mahasiswa”. Bentuk yang sering dijumpai tetapi tidak baku: “maha siswa”."},
+  {prompt: "Pilih kata baku:", options: ["olahraga", "olah raga"], answer: 0, explanation: "Bentuk baku: “olahraga”. Bentuk yang sering dijumpai tetapi tidak baku: “olah raga”."},
+  {prompt: "Pilih kata baku:", options: ["kerja sama", "kerjasama"], answer: 0, explanation: "Bentuk baku: “kerja sama”. Bentuk yang sering dijumpai tetapi tidak baku: “kerjasama”."},
+  {prompt: "Pilih kata baku:", options: ["tanggung jawab", "tanggungjawab"], answer: 0, explanation: "Bentuk baku: “tanggung jawab”. Bentuk yang sering dijumpai tetapi tidak baku: “tanggungjawab”."},
+  {prompt: "Pilih kata baku:", options: ["terima kasih", "terimakasih"], answer: 0, explanation: "Bentuk baku: “terima kasih”. Bentuk yang sering dijumpai tetapi tidak baku: “terimakasih”."},
+  {prompt: "Pilih kata baku:", options: ["antarkota", "antar kota"], answer: 0, explanation: "Bentuk baku: “antarkota”. Bentuk yang sering dijumpai tetapi tidak baku: “antar kota”."},
+  {prompt: "Pilih kata baku:", options: ["di rumah", "dirumah"], answer: 0, explanation: "Bentuk baku: “di rumah”. Bentuk yang sering dijumpai tetapi tidak baku: “dirumah”."},
+  {prompt: "Pilih kata baku:", options: ["ditulis", "di tulis"], answer: 0, explanation: "Bentuk baku: “ditulis”. Bentuk yang sering dijumpai tetapi tidak baku: “di tulis”."},
+  {prompt: "Pilih kata baku:", options: ["daripada", "dari pada"], answer: 0, explanation: "Bentuk baku: “daripada”. Bentuk yang sering dijumpai tetapi tidak baku: “dari pada”."},
+  {prompt: "Pilih kata baku:", options: ["meskipun", "meski pun"], answer: 0, explanation: "Bentuk baku: “meskipun”. Bentuk yang sering dijumpai tetapi tidak baku: “meski pun”."},
+  {prompt: "Pilih kata baku:", options: ["walaupun", "walau pun"], answer: 0, explanation: "Bentuk baku: “walaupun”. Bentuk yang sering dijumpai tetapi tidak baku: “walau pun”."},
+  {prompt: "Pilih kata baku:", options: ["sekonyong-konyong", "sekonyong konyong"], answer: 0, explanation: "Bentuk baku: “sekonyong-konyong”. Bentuk yang sering dijumpai tetapi tidak baku: “sekonyong konyong”."},
+  {prompt: "Pilih kata baku:", options: ["ekstrakurikuler", "ekstra kurikuler"], answer: 0, explanation: "Bentuk baku: “ekstrakurikuler”. Bentuk yang sering dijumpai tetapi tidak baku: “ekstra kurikuler”."},
+  {prompt: "Pilih kata baku:", options: ["nonformal", "non formal"], answer: 0, explanation: "Bentuk baku: “nonformal”. Bentuk yang sering dijumpai tetapi tidak baku: “non formal”."},
+  {prompt: "Pilih kata baku:", options: ["prasejarah", "pra sejarah"], answer: 0, explanation: "Bentuk baku: “prasejarah”. Bentuk yang sering dijumpai tetapi tidak baku: “pra sejarah”."},
+  {prompt: "Pilih kata baku:", options: ["legalisasi", "legalisir"], answer: 0, explanation: "Bentuk baku: “legalisasi”. Bentuk yang sering dijumpai tetapi tidak baku: “legalisir”."},
+  {prompt: "Pilih kata baku:", options: ["peranti", "piranti"], answer: 0, explanation: "Bentuk baku: “peranti”. Bentuk yang sering dijumpai tetapi tidak baku: “piranti”."},
+  {prompt: "Pilih kata baku:", options: ["memperhatikan", "memperhatiin"], answer: 0, explanation: "Bentuk baku: “memperhatikan”. Bentuk yang sering dijumpai tetapi tidak baku: “memperhatiin”."},
+  {prompt: "Pilih kata baku:", options: ["efektivitas", "efektifitas"], answer: 0, explanation: "Bentuk baku: “efektivitas”. Bentuk yang sering dijumpai tetapi tidak baku: “efektifitas”."},
+  {prompt: "Pilih kata baku:", options: ["produktivitas", "produktifitas"], answer: 0, explanation: "Bentuk baku: “produktivitas”. Bentuk yang sering dijumpai tetapi tidak baku: “produktifitas”."},
+  {prompt: "Pilih kata baku:", options: ["kreativitas", "kreatifitas"], answer: 0, explanation: "Bentuk baku: “kreativitas”. Bentuk yang sering dijumpai tetapi tidak baku: “kreatifitas”."},
+  {prompt: "Pilih kata baku:", options: ["objektif", "obyektif"], answer: 0, explanation: "Bentuk baku: “objektif”. Bentuk yang sering dijumpai tetapi tidak baku: “obyektif”."},
+  {prompt: "Pilih kata baku:", options: ["subjektif", "subyektif"], answer: 0, explanation: "Bentuk baku: “subjektif”. Bentuk yang sering dijumpai tetapi tidak baku: “subyektif”."},
+  {prompt: "Pilih kata baku:", options: ["apresiasi", "apresiasiasi"], answer: 0, explanation: "Bentuk baku: “apresiasi”. Bentuk yang sering dijumpai tetapi tidak baku: “apresiasi”."},
+  {prompt: "Pilih kata baku:", options: ["diagnostik", "diagnostikasi"], answer: 0, explanation: "Bentuk baku: “diagnostik”. Bentuk yang sering dijumpai tetapi tidak baku: “diagnostik”."},
+  {prompt: "Pilih kata baku:", options: ["metode", "metoda"], answer: 0, explanation: "Bentuk baku: “metode”. Bentuk yang sering dijumpai tetapi tidak baku: “metoda”."},
+  {prompt: "Pilih kata baku:", options: ["atlet", "atlit"], answer: 0, explanation: "Bentuk baku: “atlet”. Bentuk yang sering dijumpai tetapi tidak baku: “atlit”."},
+  {prompt: "Pilih kata baku:", options: ["bus", "bis"], answer: 0, explanation: "Bentuk baku: “bus”. Bentuk yang sering dijumpai tetapi tidak baku: “bis”."},
+  {prompt: "Pilih kata baku:", options: ["hakikat", "hakekat"], answer: 0, explanation: "Bentuk baku: “hakikat”. Bentuk yang sering dijumpai tetapi tidak baku: “hakekat”."},
+  {prompt: "Pilih kata baku:", options: ["nasional", "nasionil"], answer: 0, explanation: "Bentuk baku: “nasional”. Bentuk yang sering dijumpai tetapi tidak baku: “nasionil”."},
+  {prompt: "Pilih kata baku:", options: ["personel", "personil"], answer: 0, explanation: "Bentuk baku: “personel”. Bentuk yang sering dijumpai tetapi tidak baku: “personil”."},
+  {prompt: "Pilih kata baku:", options: ["manajemen", "management"], answer: 0, explanation: "Bentuk baku: “manajemen”. Bentuk yang sering dijumpai tetapi tidak baku: “management”."},
+  {prompt: "Pilih kata baku:", options: ["manajer", "manager"], answer: 0, explanation: "Bentuk baku: “manajer”. Bentuk yang sering dijumpai tetapi tidak baku: “manager”."},
+  {prompt: "Pilih kata baku:", options: ["karakter", "kharakter"], answer: 0, explanation: "Bentuk baku: “karakter”. Bentuk yang sering dijumpai tetapi tidak baku: “kharakter”."},
+  {prompt: "Pilih kata baku:", options: ["khotbah", "khutbah"], answer: 0, explanation: "Bentuk baku: “khotbah”. Bentuk yang sering dijumpai tetapi tidak baku: “khutbah”."},
+  {prompt: "Pilih kata baku:", options: ["Februari", "Febuari"], answer: 0, explanation: "Bentuk baku: “Februari”. Bentuk yang sering dijumpai tetapi tidak baku: “Febuari”."},
+  {prompt: "Pilih kata baku:", options: ["izin", "idzin"], answer: 0, explanation: "Bentuk baku: “izin”. Bentuk yang sering dijumpai tetapi tidak baku: “idzin”."},
+  {prompt: "Pilih kata baku:", options: ["cokelat", "coklat"], answer: 0, explanation: "Bentuk baku: “cokelat”. Bentuk yang sering dijumpai tetapi tidak baku: “coklat”."},
+  {prompt: "Pilih kata baku:", options: ["sekular", "sekulair"], answer: 0, explanation: "Bentuk baku: “sekular”. Bentuk yang sering dijumpai tetapi tidak baku: “sekuler”."},
+  {prompt: "Pilih kata baku:", options: ["nasabah", "nasabahh"], answer: 0, explanation: "Bentuk baku: “nasabah”. Bentuk yang sering dijumpai tetapi tidak baku: “nasabahh”."},
+  {prompt: "Pilih kata baku:", options: ["silaturahmi", "silaturohmi"], answer: 0, explanation: "Bentuk baku: “silaturahmi”. Bentuk yang sering dijumpai tetapi tidak baku: “silaturahim”."},
+  {prompt: "Pilih kata baku:", options: ["persentase", "prosentase"], answer: 0, explanation: "Bentuk baku: “persentase”. Bentuk yang sering dijumpai tetapi tidak baku: “prosentase”."}
+];
+let current = 0, score = 0, checked = false, answers = Array(questions.length).fill(null);
+const $ = id => document.getElementById(id);
+function shuffleOptions(q) {
+  return q.options.map((text, originalIndex)=>({text, originalIndex}));
+}
+function renderQuestion() {
+  const q = questions[current];
+  checked = false;
+  $("questionNumber").textContent = `SOAL ${current+1} DARI ${questions.length}`;
+  $("questionText").textContent = "";
+  $("options").innerHTML = "";
+  q.options.forEach((word, index) => {
+    const choice = document.createElement("button");
+    choice.type = "button";
+    choice.className = "option";
+    choice.textContent = word;
+    choice.addEventListener("click", () => {
+      if (checked) return;
+      checked = true;
+      const isCorrect = index === q.answer;
+      answers[current] = { chosen: index, correct: isCorrect };
+      if (isCorrect) score++;
+      choice.classList.add(isCorrect ? "correct" : "wrong");
+      $("options").querySelectorAll("button").forEach(b => { b.disabled = true; });
+      $("nextBtn").classList.remove("hidden");
+      $("nextBtn").textContent = current === questions.length - 1 ? "Lihat Hasil" : "Soal Berikutnya";
+      updateStats();
+    });
+    $("options").appendChild(choice);
+  });
+  $("checkBtn").classList.add("hidden");
+  $("nextBtn").classList.add("hidden");
+  $("quitBtn").classList.remove("hidden");
+  updateStats();
+}
+function updateStats() { /* Statistik progres disembunyikan sesuai permintaan. */ }
+function finishQuiz() {
+  $("quizPanel").classList.add("hidden"); $("intro").classList.add("hidden");
+  $("resultPanel").classList.remove("hidden");
+  const done = answers.filter(a=>a!==null).length;
+  const correct = answers.filter(a=>a && a.correct).length;
+  const wrong = done-correct;
+  $("finalScore").textContent = score;
+  $("correctCount").textContent = correct;
+  $("wrongCount").textContent = wrong;
+  $("resultMessage").textContent = done < questions.length
+    ? `Kuis diakhiri setelah ${done} soal. Nilai dihitung dari jawaban yang sudah diperiksa.`
+    : score>=90 ? "Sangat baik! Penguasaan kata baku Anda sangat kuat."
+    : score>=75 ? "Bagus! Tinjau kembali beberapa bentuk kata yang masih keliru."
+    : score>=60 ? "Cukup baik. Latih lagi kata baku dan penulisannya."
+    : "Terus berlatih untuk memperkuat pemahaman kata baku.";
+}
+function restart() {
+  // Acak urutan soal setiap sesi baru, tanpa mengubah pasangan kata atau kunci jawaban.
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
+  current=0; score=0; checked=false; answers=Array(questions.length).fill(null);
+  $("intro").classList.add("hidden"); $("resultPanel").classList.add("hidden");
+  $("quizPanel").classList.remove("hidden"); renderQuestion();
+}
+$("startBtn").addEventListener("click", restart);
+$("nextBtn").addEventListener("click", ()=>{ if(current < questions.length-1){current++;renderQuestion();} else finishQuiz(); });
+$("quitBtn").addEventListener("click", finishQuiz);
+if ($("restartBtn")) $("restartBtn").addEventListener("click", restart);
+</script>
+</body>
+</html>
